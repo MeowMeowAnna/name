@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        input {
+            width: 95%;
+        }
+        .tbl {
+            background: white;
+            border: 0;
+            cellpadding: 0px;
+            bordercolor: white;
+            width: 100%;
+            margin: 0px;
+            border-collapse: collapse;
+        }
+        p {
+            font-family: arial, sans-serif;
+            width: 100%;
+        }
+        .table {
+            width: 100%;
+            margin-bottom: 20px;
+            border: 15px solid #F2F8F8;
+            border-top: 5px solid #F2F8F8;
+            border-collapse: collapse;
+        }
+        .table th {
+            font-weight: bold;
+            padding: 5px;
+            background: #F2F8F8;
+            border: none;
+            border-bottom: 5px solid #F2F8F8;
+        }
+        .table td {
+            padding: 5px;
+            border: none;
+            border-bottom: 5px solid #F2F8F8;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Обогреватели</h2>
+
+<input id="search_ob" style="width: 85%">
+<button onclick="searchObByName()" style="width: 13%">Искать по имени</button>
+<button onclick="document.location='konvektori.html'">Открыть страницу с конвекторами</button>
+<button onclick="document.location='comment.html'">Открыть страницу с отзывами</button>
+<br/>
+
+<p>Фильтрация по цене</p>
+<input id="more_ob" style="width: 30%">
+<select id="ort">
+    <option>Больше</option>
+    <option>Меньше</option>
+    <option>Равно</option>
+</select>
+<button onclick="priceObmore()" style="width: 13%">Выполнить</button>
+
+<table class="table" id="obList">
+
+</table>
+
+<form >
+    <table class="tbl">
+        <tr>
+            <td><p><nobr>Хотите дополнить список?</nobr></td>
+        </tr>
+        <tr>
+            <td><input id="ob_name" placeholder="Имя конвектора"></td>
+            <td><p><nobr>Введите наименование конвектора</nobr></p></td>
+        </tr>
+        <tr>
+            <td><input id="ob_color" placeholder="Цвет конвектора"></td>
+            <td><p><nobr>Укажите цвет</nobr></p></td>
+        </tr>
+        <tr>
+            <td><input id="ob_maxMohch" placeholder="Максимальная мощность"></td>
+            <td><p><nobr>Укажите максимальную мощность</nobr></p></td>
+        </tr>
+        <tr>
+            <td><input id="ob_rekSqr" placeholder="Рекомендуемая площадь обогрева"></td>
+            <td><p><nobr>Укажите пекомендуемую площадь обогрева</nobr></p></td>
+        </tr>
+        <tr>
+            <td><input id="ob_naprPit" placeholder="Напряжение питания"></td>
+            <td><p><nobr>Укажите напряжение питания</nobr></p></td>
+        </tr>
+        <tr>
+            <td><input id="ob_price" placeholder="Цена конвектора"></td>
+            <td><p><nobr>Введите цену</nobr></p></td>
+        </tr>
+    </table>
+    <button onclick="createOb()">Дополнить список</button>
+
+</form>
+
+<script>
+    function searchObByName() {
+        var name = document.getElementById("search_ob").value;
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                var ob = JSON.parse(this.responseText);
+                var html = '<tr>\n' +
+                    '        <th>id</th>\n' +
+                    '        <th>Имя</th>\n' +
+                    '        <th>Цена</th>\n' +
+                    '        <th>Максимальная мощность</th>' +
+                    '        <th>Рекомендуемая площадь обогрева</th>' +
+                    '        <th>Напряжение питания</th>' +
+                    '        <th>Цвет</th>\n' +
+                    '    </tr>';
+                html = html + '<tr><td>' + ob.id + '</td>\n' +
+                    '        <td>' + ob.name + '</td>\n' +
+                    '        <td>' + ob.color + '</td>' +
+                    '        <td>' + ob.maxMohch + '</td>' +
+                    '        <td>' + ob.rekSqr + '</td>' +
+                    '        <td>' + ob.naprPit + '</td>' +
+                    '        <td>' + ob.price + '</td>\n' +
+                    '        <td><button onclick="deleteOb(' + ob.id + ')">Delete</button></td></tr>';
+                document.getElementById("obList").innerHTML = html;
+            }
+        };
+
+        xhttp.open("GET", "http://localhost:8090/pribors/findObByName?name=" + name, true);
+        xhttp.send();
+    }
+
+    function deleteOb(obId) {
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("DELETE", "http://localhost:8090/pribors/deleteOb/" + obId, true);
+        xhttp.send();
+    }
+
+    function createOb() {
+        var obn = document.getElementById("ob_name").value;
+        var obc = document.getElementById("k_color").value;
+        var obmaxMohch = document.getElementById("k_maxMohch").value;
+        var obrekSqr = document.getElementById("k_rekSqr").value;
+        var obnaprPit = document.getElementById("k_naprPit").value;
+        var obp = document.getElementById("k_price").value;
+
+        var xmlhttp = new XMLHttpRequest();   // new HttpRequest instance
+        xmlhttp.open("POST", "http://localhost:8090/pribors/saveOb");
+        xmlhttp.setRequestHeader("Content-Type", "application/json");
+        xmlhttp.send(JSON.stringify({name: obn,
+            color: obc, maxMohch: obmaxMohch, rekSqr: obrekSqr,
+            naprPit: obnaprPit, price: obp}));
+        loadOb();
+    }
+
+    function loadOb() {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                var obs = JSON.parse(this.responseText);
+                var html = '<tr>\n' +
+                    '        <th>id</th>\n' +
+                    '        <th>Имя</th>\n' +
+                    '        <th>Цена</th>\n' +
+                    '        <th>Максимальная мощность</th>' +
+                    '        <th>Рекомендуемая площадь обогрева</th>' +
+                    '        <th>Напряжение питания</th>' +
+                    '        <th>Цвет</th>\n' +
+                    '        <th>Удалить</th>\n' +
+                    '    </tr>';
+                for (var i = 0; i < obs.length; i++) {
+                    var ob = obs[i];
+                    console.log(ob);
+                    html = html + '<tr><td>' + ob.id + '</td>\n' +
+                        '        <td>' + ob.name + '</td>\n' +
+                        '        <td>' + ob.color + '</td>' +
+                        '        <td>' + ob.maxMohch + '</td>' +
+                        '        <td>' + ob.rekSqr + '</td>' +
+                        '        <td>' + ob.naprPit + '</td>' +
+                        '        <td>' + ob.price + '</td>\n' +
+                        '        <td><button onclick="deleteOb(' + ob.id + ')">Delete</button></td></tr>';
+                }
+                document.getElementById("obList").innerHTML = html;
+            }
+        };
+        xhttp.open("GET", "http://localhost:8090/pribors/findAllOb", true);
+        xhttp.send();
+    }
+
+    function priceObmore() {
+        var price = document.getElementById("more_ob").value;
+        var opt = document.getElementById("opt").value;
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                var obs = JSON.parse(this.responseText);
+                var html = '<tr>\n' +
+                    '        <th>id</th>\n' +
+                    '        <th>Имя</th>\n' +
+                    '        <th>Цена</th>\n' +
+                    '        <th>Максимальная мощность</th>' +
+                    '        <th>Рекомендуемая площадь обогрева</th>' +
+                    '        <th>Напряжение питания</th>' +
+                    '        <th>Цвет</th>\n' +
+                    '        <th>Удалить</th>\n' +
+                    '    </tr>';
+                for (var i = 0; i < obs.length; i++) {
+                    var ob = obs[i];
+                    console.log(ob);
+                    html = html + '<tr><td>' + ob.id + '</td>\n' +
+                        '        <td>' + ob.name + '</td>\n' +
+                        '        <td>' + ob.color + '</td>' +
+                        '        <td>' + ob.maxMohch + '</td>' +
+                        '        <td>' + ob.rekSqr + '</td>' +
+                        '        <td>' + ob.naprPit + '</td>' +
+                        '        <td>' + ob.price + '</td>\n' +
+                        '        <td><button onclick="deleteOb(' + ob.id + ')">Delete</button></td></tr>';
+                }
+                document.getElementById("obList").innerHTML = html;
+            }
+        };
+        if (opt == "Больше") {
+            xhttp.open("GET", "http://localhost:8090/pribors/findObMoreThan/" + price, true);
+        }
+        xhttp.open("GET", "http://localhost:8090/pribors/findObMoreThan/" + price, true);
+        xhttp.send();
+    }
+
+    loadOb();
+</script>
+</body>
+</html>

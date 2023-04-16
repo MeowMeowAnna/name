@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        input {
+            width: 95%;
+        }
+        .tbl {
+            background: white;
+            border: 0;
+            cellpadding: 0px;
+            bordercolor: white;
+            width: 100%;
+            margin: 0px;
+            border-collapse: collapse;
+        }
+        p {
+            font-family: arial, sans-serif;
+            width: 100%;
+        }
+        .table {
+            width: 100%;
+            margin-bottom: 20px;
+            border: 5px solid #fff;
+            border-bottom-width: 3px;
+            border-collapse: collapse;
+            outline: 3px solid #ffd300;
+            font-size: 15px;
+            background: #fff!important;
+        }
+        .table th {
+            font-weight: bold;
+            padding: 7px;
+            background: #ffd300;
+            border: none;
+            text-align: left;
+            font-size: 15px;
+            border-top: 3px solid #fff;
+            border-bottom: 3px solid #ffd300;
+        }
+        .table td {
+            padding: 7px;
+            border: none;
+            border-top: 3px solid #fff;
+            border-bottom: 3px solid #fff;
+            font-size: 15px;
+        }
+        .table tbody tr:nth-child(even){
+            background: #f8f8f8!important;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Отзывы</h2>
+
+<input id="search_r" style="width: 85%">
+<button onclick="searchRByName()" style="width: 14%">Искать по имени продукта</button>
+<button onclick="document.location='obogrevateli.html'">Открыть страницу с обогревателями</button>
+<button onclick="document.location='konvektori.html'">Открыть страницу с конвекторами</button>
+
+<table class="table" id="cList">
+
+</table>
+
+<form >
+    <table class="tbl">
+        <tr>
+            <td><p><nobr>Хотите добавить отзыв?</nobr></td>
+        </tr>
+        <tr>
+            <td><input id="c_name" placeholder="Имя продукта"></td>
+            <td><p><nobr>Введите имя продукта</nobr></p></td>
+        </tr>
+        <tr>
+            <td><input id="c_rate" placeholder="Оценка продукта"></td>
+            <td><p><nobr>Оценку от 0 до 10</nobr></p></td>
+        </tr>
+        <tr>
+            <td><input id="c_comment" placeholder="Отзыв"></td>
+            <td><p><nobr>Укажите описание</nobr></p></td>
+        </tr>
+    </table>
+    <button onclick="createC()">Дополнить список</button>
+
+</form>
+
+<script>
+    function searchRByName() {
+        var name = document.getElementById("search_c").value;
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                var c = JSON.parse(this.responseText);
+                var html = '<tr>\n' +
+                    '        <th style="width: 10%">Имя</th>\n' +
+                    '        <th style="width: 5%">Оценка</th>\n' +
+                    '        <th style="width: 85%">Цвет</th>\n' +
+                    '    </tr>';
+                html = html + '<tr><td style="width: 10%">' + c.name + '</td>\n' +
+                    '        <td style="width: 5%">' + c.rate + '</td>\n' +
+                    '        <td style="width: 85%">' + c.comment + '</td>\n' +
+                    '        <td><button onclick="deleteC(' + c.id + ')">Delete</button></td></tr>';
+                document.getElementById("cList").innerHTML = html;
+            }
+        };
+        xhttp.open("GET", "http://localhost:8090/pribors/findCByName?name=" + name, true);
+        xhttp.send();
+    }
+
+    function deleteC(cId) {
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("DELETE", "http://localhost:8090/pribors/deleteC/" + cId, true);
+        xhttp.send();
+    }
+
+    function createC() {
+        var cn = document.getElementById("c_name").value;
+        var cr = document.getElementById("c_rate").value;
+        var cd = document.getElementById("c_comment").value;
+
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.open("POST", "http://localhost:8090/pribors/savec");
+        xmlhttp.setRequestHeader("Content-Type", "application/json");
+        xmlhttp.send(JSON.stringify({name: cn, rate: cr, comment: cd}));
+        loadC();
+    }
+
+    function loadC() {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                var cs = JSON.parse(this.responseText);
+                var html = '<tr>\n' +
+                    '        <th style="width: 10%">Имя</th>\n' +
+                    '        <th style="width: 5%">Оценка</th>\n' +
+                    '        <th style="width: 85%">Комментарий</th>\n' +
+                    '    </tr>';
+                for (var i = 0; i < cs.length; i++) {
+                    var c = cs[i];
+                    console.log(c);
+                    html = html + '<tr><td style="width: 10%">' + c.name + '</td>\n' +
+                        '        <td style="width: 5%">' + c.rate + '</td>\n' +
+                        '        <td style="width: 85%">' + c.comment + '</td>\n' +
+                        '        <td><button onclick="deleteC(' + c.id + ')">Delete</button></td></tr>';
+                }
+                document.getElementById("cList").innerHTML = html;
+            }
+        };
+        xhttp.open("GET", "http://localhost:8090/pribors/findAllC", true);
+        xhttp.send();
+    }
+
+    loadC();
+</script>
+</body>
+</html>

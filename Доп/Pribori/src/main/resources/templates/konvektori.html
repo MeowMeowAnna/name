@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        input {
+            width: 95%;
+        }
+        .tbl {
+            background: white;
+            border: 0;
+            cellpadding: 0px;
+            bordercolor: white;
+            width: 75%;
+            margin: 0px;
+            border-collapse: collapse;
+        }
+        p {
+            font-family: arial, sans-serif;
+            width: 100%;
+        }
+        .table {
+            width: 100%;
+            border: none;
+            margin-bottom: 20px;
+        }
+        .table thead th {
+            font-weight: bold;
+            text-align: left;
+            border: none;
+            padding: 10px 15px;
+            background: #d8d8d8;
+            font-size: 14px;
+        }
+        .table thead tr th:first-child {
+            border-radius: 8px 0 0 8px;
+        }
+        .table thead tr th:last-child {
+            border-radius: 0 8px 8px 0;
+        }
+        .table tbody td {
+            text-align: left;
+            border: none;
+            padding: 10px 15px;
+            font-size: 14px;
+            vertical-align: top;
+        }
+        .table tbody tr:nth-child(even){
+            background: #f3f3f3;
+        }
+        .table tbody tr td:first-child {
+            border-radius: 8px 0 0 8px;
+        }
+        .table tbody tr td:last-child {
+            border-radius: 0 8px 8px 0;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Конвекторы</h2>
+
+<input id="search_k" style="width: 85%">
+<button onclick="searchKByName()" style="width: 13%">Искать колонки по имени</button>
+<button onclick="document.location='obogrevateli.html'">Открыть страницу с обогревателями</button>
+<button onclick="document.location='comment.html'">Открыть страницу с отзывами</button>
+
+<table class="table" id="kList">
+
+</table>
+
+<form >
+    <table class="tbl">
+        <tr>
+            <td><p><nobr>Хотите дополнить список?</nobr></td>
+        </tr>
+        <tr>
+            <td><input id="k_name" placeholder="Имя конвектора"></td>
+            <td><p><nobr>Введите наименование конвектора</nobr></p></td>
+        </tr>
+        <tr>
+            <td><input id="k_color" placeholder="Цвет конвектора"></td>
+            <td><p><nobr>Укажите цвет</nobr></p></td>
+        </tr>
+        <tr>
+            <td><input id="k_maxMohch" placeholder="Максимальная мощность"></td>
+            <td><p><nobr>Укажите максимальную мощность</nobr></p></td>
+        </tr>
+        <tr>
+            <td><input id="k_rekSqr" placeholder="Рекомендуемая площадь обогрева"></td>
+            <td><p><nobr>Укажите пекомендуемую площадь обогрева</nobr></p></td>
+        </tr>
+        <tr>
+            <td><input id="k_naprPit" placeholder="Напряжение питания"></td>
+            <td><p><nobr>Укажите напряжение питания</nobr></p></td>
+        </tr>
+        <tr>
+            <td><input id="k_price" placeholder="Цена конвектора"></td>
+            <td><p><nobr>Введите цену</nobr></p></td>
+        </tr>
+    </table>
+    <button onclick="createK()">Дополнить список</button>
+
+</form>
+
+<script>
+    function searchKByName() {
+        var name = document.getElementById("search_s").value;
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                var k = JSON.parse(this.responseText);
+                var html = '<tr>\n' +
+                    '        <th>id</th>\n' +
+                    '        <th>Имя</th>\n' +
+                    '        <th>Цена</th>\n' +
+                    '        <th>Максимальная мощность</th>' +
+                    '        <th>Рекомендуемая площадь обогрева</th>' +
+                    '        <th>Напряжение питания</th>' +
+                    '        <th>Цвет</th>\n' +
+                    '    </tr>';
+                html = html + '<tr><td>' + k.id + '</td>\n' +
+                    '        <td>' + k.name + '</td>\n' +
+                    '        <td>' + k.color + '</td>' +
+                    '        <td>' + k.maxMohch + '</td>' +
+                    '        <td>' + k.rekSqr + '</td>' +
+                    '        <td>' + k.naprPit + '</td>' +
+                    '        <td>' + k.price + '</td>\n' +
+                    '        <td><button onclick="deleteK(' + k.id + ')">Delete</button></td></tr>';
+                document.getElementById("kList").innerHTML = html;
+            }
+        };
+        xhttp.open("GET", "http://localhost:8090/pribors/findKByName?name=" + name, true);
+        xhttp.send();
+    }
+
+    function deleteK(kId) {
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("DELETE", "http://localhost:8090/pribors/deleteK/" + kId, true);
+        xhttp.send();
+    }
+
+    function createK() {
+        var kn = document.getElementById("k_name").value;
+        var kc = document.getElementById("k_color").value;
+        var kmaxMohch = document.getElementById("k_maxMohch").value;
+        var krekSqr = document.getElementById("k_rekSqr").value;
+        var knaprPit = document.getElementById("k_naprPit").value;
+        var kp = document.getElementById("k_price").value;
+
+        var xmlhttp = new XMLHttpRequest();   // new HttpRequest instance
+        xmlhttp.open("POST", "http://localhost:8090/pribors/saves");
+        xmlhttp.setRequestHeader("Content-Type", "application/json");
+        xmlhttp.send(JSON.stringify({name: kn,
+            color: kc, maxMohch: kmaxMohch, rekSqr: krekSqr,
+            naprPit: knaprPit, price: kp}));
+        loadS();
+    }
+
+    function loadS() {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                var ks = JSON.parse(this.responseText);
+                var html = '<tr>\n' +
+                    '        <th>id</th>\n' +
+                    '        <th>Имя</th>\n' +
+                    '        <th>Цена</th>\n' +
+                    '        <th>Максимальная мощность</th>' +
+                    '        <th>Рекомендуемая площадь обогрева</th>' +
+                    '        <th>Напряжение питания</th>' +
+                    '        <th>Цвет</th>\n' +
+                    '        <th>Удалить</th>\n' +
+                    '    </tr>';
+                for (var i = 0; i < ks.length; i++) {
+                    var k = ks[i];
+                    console.log(k);
+                    html = html + '<tr><td>' + k.id + '</td>\n' +
+                        '        <td>' + k.name + '</td>\n' +
+                        '        <td>' + k.color + '</td>' +
+                        '        <td>' + k.maxMohch + '</td>' +
+                        '        <td>' + k.rekSqr + '</td>' +
+                        '        <td>' + k.naprPit + '</td>' +
+                        '        <td>' + k.price + '</td>\n' +
+                        '        <td><button onclick="deleteK(' + k.id + ')">Delete</button></td></tr>';
+                }
+                document.getElementById("kList").innerHTML = html;
+            }
+        };
+        xhttp.open("GET", "http://localhost:8090/pribors/findAllK", true);
+        xhttp.send();
+    }
+
+    loadS();
+</script>
+</body>
+</html>
